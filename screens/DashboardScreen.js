@@ -1,30 +1,34 @@
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { useApp } from '../components/AppContext';
 
-const categoryMeta = {
-  'Food & Dining':  { emoji: '🍔', color: '#F59E0B' },
-  'Transport':      { emoji: '🚌', color: '#6C63FF' },
-  'Shopping':       { emoji: '🛍', color: '#10B981' },
-  'Rent & Bills':   { emoji: '💡', color: '#3ECFCF' },
-  'Entertainment':  { emoji: '🎬', color: '#EC4899' },
-  'Health':         { emoji: '💊', color: '#EF4444' },
-};
-
 export default function DashboardScreen({ onViewAll }) {
   const { totalBudget, budgets, expenses, getSpentByCategory } = useApp();
   const spentByCategory = getSpentByCategory();
   const totalSpent = Object.values(spentByCategory).reduce((s, v) => s + v, 0);
-  const percentage = Math.min(Math.round((totalSpent / totalBudget) * 100), 100);
+  const safeTotalBudget = totalBudget || 0;
+  const percentage = safeTotalBudget > 0
+    ? Math.min(Math.round((totalSpent / safeTotalBudget) * 100), 100)
+    : 0;
+
+  // ✅ normalize budgets — handles both array and old object format
+  const categoryList = Array.isArray(budgets)
+    ? budgets
+    : Object.entries(budgets).map(([name, val]) => ({
+        name,
+        budget: typeof val === 'object' ? val.budget : val,
+        emoji:  typeof val === 'object' ? val.emoji  : '❓',
+        color:  typeof val === 'object' ? val.color  : '#999',
+      }));
 
   return (
     <ScrollView style={styles.container}>
 
       {/* Budget Overview Card */}
       <View style={styles.budgetCard}>
-        <Text style={styles.budgetLabel}>March 2026 — Total Spent</Text>
-        <Text style={styles.budgetAmount}>₹{totalSpent.toLocaleString('en-IN')}</Text>
+        <Text style={styles.budgetLabel}>Total Spent</Text>
+        <Text style={styles.budgetAmount}>₹{(totalSpent || 0).toLocaleString('en-IN')}</Text>
         <View style={styles.progressRow}>
-          <Text style={styles.progressText}>Budget: ₹{totalBudget.toLocaleString('en-IN')}</Text>
+          <Text style={styles.progressText}>Budget: ₹{safeTotalBudget.toLocaleString('en-IN')}</Text>
           <Text style={styles.progressText}>{percentage}% used</Text>
         </View>
         <View style={styles.progressBarBg}>
@@ -38,21 +42,21 @@ export default function DashboardScreen({ onViewAll }) {
       {/* Category Cards */}
       <Text style={styles.sectionTitle}>Spending by Category</Text>
       <View style={styles.categoryGrid}>
-        {Object.keys(budgets).map((catName) => {
-          const meta   = categoryMeta[catName];
-          const spent  = spentByCategory[catName] || 0;
-          const budget = budgets[catName];
-          const pct    = Math.min(Math.round((spent / budget) * 100), 100);
+        {categoryList.map((cat) => {
+          const spent  = spentByCategory[cat.name] || 0;
+          const budget = cat.budget || 0;
+          const pct    = budget > 0 ? Math.min(Math.round((spent / budget) * 100), 100) : 0;
+
           return (
-            <View key={catName} style={styles.categoryCard}>
-              <Text style={styles.categoryEmoji}>{meta.emoji}</Text>
-              <Text style={styles.categoryName}>{catName}</Text>
+            <View key={cat.name} style={styles.categoryCard}>
+              <Text style={styles.categoryEmoji}>{cat.emoji || '❓'}</Text>
+              <Text style={styles.categoryName}>{cat.name}</Text>
               <Text style={styles.categoryAmount}>₹{spent.toLocaleString('en-IN')}</Text>
               <Text style={styles.categoryBudget}>of ₹{budget.toLocaleString('en-IN')}</Text>
               <View style={styles.catBarBg}>
                 <View style={[styles.catBarFill, {
                   width: `${pct}%`,
-                  backgroundColor: pct >= 100 ? '#EF4444' : meta.color
+                  backgroundColor: pct >= 100 ? '#EF4444' : (cat.color || '#6C63FF'),
                 }]} />
               </View>
             </View>
@@ -60,7 +64,7 @@ export default function DashboardScreen({ onViewAll }) {
         })}
       </View>
 
-      {/* Recent Transactions Header with View All */}
+      {/* Recent Transactions Header */}
       <View style={styles.txnHeader}>
         <Text style={styles.sectionTitle2}>Recent Transactions</Text>
         <TouchableOpacity onPress={onViewAll}>

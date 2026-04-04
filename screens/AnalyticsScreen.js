@@ -2,15 +2,6 @@ import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-nati
 import { useState } from 'react';
 import { useApp } from '../components/AppContext';
 
-const categoryMeta = {
-  'Food & Dining':  { emoji: '🍔', color: '#F59E0B' },
-  'Transport':      { emoji: '🚌', color: '#6C63FF' },
-  'Shopping':       { emoji: '🛍', color: '#10B981' },
-  'Rent & Bills':   { emoji: '💡', color: '#3ECFCF' },
-  'Entertainment':  { emoji: '🎬', color: '#EC4899' },
-  'Health':         { emoji: '💊', color: '#EF4444' },
-};
-
 const getMonthOptions = () => {
   const options = [];
   const now = new Date();
@@ -19,7 +10,7 @@ const getMonthOptions = () => {
     options.push({
       label: d.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }),
       month: d.getMonth(),
-      year: d.getFullYear(),
+      year:  d.getFullYear(),
     });
   }
   return options;
@@ -37,7 +28,17 @@ export default function AnalyticsScreen() {
   const totalSpent      = Object.values(spentByCategory).reduce((s, v) => s + v, 0);
   const totalRemaining  = Math.max(totalBudget - totalSpent, 0);
 
-  // Build weekly bar data from real expenses
+  // ✅ normalize budgets — handles both array and old object format
+  const categoryList = Array.isArray(budgets)
+    ? budgets
+    : Object.entries(budgets).map(([name, val]) => ({
+        name,
+        budget: typeof val === 'object' ? val.budget : val,
+        emoji:  typeof val === 'object' ? val.emoji  : '❓',
+        color:  typeof val === 'object' ? val.color  : '#6C63FF',
+      }));
+
+  // Weekly bar chart
   const weeklyData = days.map((day, i) => {
     const total = monthExpenses
       .filter(exp => new Date(exp.fullDate).getDay() === i)
@@ -90,7 +91,7 @@ export default function AnalyticsScreen() {
         <View style={styles.chartArea}>
           {weeklyData.map((d) => {
             const heightPct = (d.amount / maxAmount) * 100;
-            const isOver = d.amount > avgAmount && d.amount > 0;
+            const isOver    = d.amount > avgAmount && d.amount > 0;
             return (
               <View key={d.day} style={styles.barCol}>
                 <Text style={styles.barAmount}>
@@ -113,24 +114,26 @@ export default function AnalyticsScreen() {
       {/* Category Breakdown */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Category Breakdown</Text>
-        {Object.keys(categoryMeta).map((catName) => {
-          const meta   = categoryMeta[catName];
-          const spent  = spentByCategory[catName] || 0;
-          const budget = budgets[catName] || 0;
+        {categoryList.map((cat) => {
+          const spent  = spentByCategory[cat.name] || 0;
+          const budget = cat.budget || 0;
           const pct    = budget > 0 ? Math.min(Math.round((spent / budget) * 100), 100) : 0;
           const isOver = spent > budget && budget > 0;
           return (
-            <View key={catName} style={styles.catRow}>
-              <Text style={styles.catEmoji}>{meta.emoji}</Text>
+            <View key={cat.name} style={styles.catRow}>
+              <Text style={styles.catEmoji}>{cat.emoji}</Text>
               <View style={styles.catInfo}>
                 <View style={styles.catTopRow}>
-                  <Text style={styles.catName}>{catName}</Text>
+                  <Text style={styles.catName}>{cat.name}</Text>
                   <Text style={[styles.catPct, isOver && { color: '#EF4444' }]}>
                     {isOver ? '⚠ Over!' : `${pct}%`}
                   </Text>
                 </View>
                 <View style={styles.catBarBg}>
-                  <View style={[styles.catBarFill, { width: `${pct}%`, backgroundColor: isOver ? '#EF4444' : meta.color }]} />
+                  <View style={[styles.catBarFill, {
+                    width: `${pct}%`,
+                    backgroundColor: isOver ? '#EF4444' : (cat.color || '#6C63FF'),
+                  }]} />
                 </View>
                 <Text style={styles.catAmounts}>
                   ₹{spent.toLocaleString('en-IN')} of ₹{budget.toLocaleString('en-IN')}

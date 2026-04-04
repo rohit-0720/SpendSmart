@@ -1,35 +1,19 @@
 import { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Alert, Modal } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Modal } from 'react-native';
 import { useApp } from '../components/AppContext';
-
-const categories = [
-  { name: 'Food & Dining',  emoji: '🍔', color: '#F59E0B' },
-  { name: 'Transport',      emoji: '🚌', color: '#6C63FF' },
-  { name: 'Shopping',       emoji: '🛍', color: '#10B981' },
-  { name: 'Rent & Bills',   emoji: '💡', color: '#3ECFCF' },
-  { name: 'Entertainment',  emoji: '🎬', color: '#EC4899' },
-  { name: 'Health',         emoji: '💊', color: '#EF4444' },
-];
-
-const emojiMap = {
-  'Food & Dining': '🍔', 'Transport': '🚌', 'Shopping': '🛍',
-  'Rent & Bills': '💡', 'Entertainment': '🎬', 'Health': '💊',
-};
 
 const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
 const getDaysInMonth = (month, year) => {
-  const m = parseInt(month);
-  const y = parseInt(year);
-  return new Date(y, m + 1, 0).getDate();
+  return new Date(parseInt(year), parseInt(month) + 1, 0).getDate();
 };
 
 const formatDate = (day, month, year) => {
-  const today = new Date();
-  const selected = new Date(year, month, day);
+  const today     = new Date();
+  const selected  = new Date(year, month, day);
   const yesterday = new Date();
   yesterday.setDate(today.getDate() - 1);
-  if (selected.toDateString() === today.toDateString()) return 'Today';
+  if (selected.toDateString() === today.toDateString())     return 'Today';
   if (selected.toDateString() === yesterday.toDateString()) return 'Yesterday';
   return `${day} ${months[month]} ${year}`;
 };
@@ -38,41 +22,60 @@ export default function AddExpenseScreen() {
   const today = new Date();
   const [amount, setAmount]               = useState('');
   const [description, setDescription]     = useState('');
-  const [selectedCat, setSelectedCat]     = useState('Food & Dining');
-  const [notes, setNotes]                 = useState('');
   const [success, setSuccess]             = useState(false);
   const [showDateModal, setShowDateModal] = useState(false);
-  const [day, setDay]       = useState(today.getDate());
-  const [month, setMonth]   = useState(today.getMonth());
-  const [year, setYear]     = useState(today.getFullYear());
+  const [amountError, setAmountError]     = useState(false);
+  const [descError, setDescError]         = useState(false);
+  const [day, setDay]         = useState(today.getDate());
+  const [month, setMonth]     = useState(today.getMonth());
+  const [year, setYear]       = useState(today.getFullYear());
   const [tempDay, setTempDay]     = useState(today.getDate());
   const [tempMonth, setTempMonth] = useState(today.getMonth());
   const [tempYear, setTempYear]   = useState(today.getFullYear());
 
-  const { addExpense } = useApp();
+  const { addExpense, budgets } = useApp();
 
-  const years = [today.getFullYear(), today.getFullYear() - 1];
+  // ✅ read categories from context — handles both array and old object format
+  const categories = Array.isArray(budgets)
+    ? budgets
+    : Object.entries(budgets).map(([name, val]) => ({
+        name,
+        emoji: typeof val === 'object' ? val.emoji : '❓',
+        color: typeof val === 'object' ? val.color : '#6C63FF',
+      }));
+
+  // ✅ default selected to first category dynamically
+  const [selectedCat, setSelectedCat] = useState(categories[0]?.name || 'Food & Dining');
+
+  const years     = [today.getFullYear(), today.getFullYear() - 1];
   const totalDays = getDaysInMonth(tempMonth, tempYear);
-  const daysList = Array.from({ length: totalDays }, (_, i) => i + 1);
+  const daysList  = Array.from({ length: totalDays }, (_, i) => i + 1);
 
   const handleAdd = () => {
-    if (!amount || !description) {
-      Alert.alert('Missing info', 'Please enter an amount and description.');
-      return;
-    }
-    const fullDate = new Date(year, month, day).toISOString();
+    const hasAmountError = !amount;
+    const hasDescError   = !description;
+    setAmountError(hasAmountError);
+    setDescError(hasDescError);
+    if (hasAmountError || hasDescError) return;
+
+    // ✅ get emoji directly from category list
+    const catObj  = categories.find(c => c.name === selectedCat);
+    const fullDate = new Date(year, month, day, 12, 0, 0).toISOString();
+
     addExpense({
-      name: description,
+      name:     description,
       category: selectedCat,
-      amount: parseFloat(amount),
-      emoji: emojiMap[selectedCat],
-      date: formatDate(day, month, year),
+      amount:   parseFloat(amount),
+      emoji:    catObj?.emoji || '❓',
+      date:     formatDate(day, month, year),
       fullDate,
     });
+
     setSuccess(true);
     setAmount('');
     setDescription('');
-    setNotes('');
+    setAmountError(false);
+    setDescError(false);
     setTimeout(() => setSuccess(false), 3000);
   };
 
@@ -91,35 +94,44 @@ export default function AddExpenseScreen() {
     setShowDateModal(false);
   };
 
+  const selectedCatObj = categories.find(c => c.name === selectedCat);
+
   return (
     <ScrollView style={styles.container}>
 
+      {/* Success Banner */}
       {success && (
         <View style={styles.successBanner}>
-          <Text style={styles.successText}>✓ Expense added successfully!</Text>
+          <Text style={styles.successIcon}>✓</Text>
+          <View>
+            <Text style={styles.successTitle}>Expense added!</Text>
+            <Text style={styles.successSub}>Your spending has been recorded.</Text>
+          </View>
         </View>
       )}
 
       <View style={styles.card}>
 
         {/* Amount */}
-        <Text style={styles.label}>Amount (₹)</Text>
+        <Text style={styles.label}>Amount (₹) <Text style={styles.required}>*</Text></Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, amountError && styles.inputError]}
           placeholder="0.00"
           keyboardType="numeric"
           value={amount}
-          onChangeText={setAmount}
+          onChangeText={(val) => { setAmount(val); setAmountError(false); }}
         />
+        {amountError && <Text style={styles.errorText}>⚠ Amount is required</Text>}
 
         {/* Description */}
-        <Text style={styles.label}>Description</Text>
+        <Text style={styles.label}>Description <Text style={styles.required}>*</Text></Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, descError && styles.inputError]}
           placeholder="What did you spend on?"
           value={description}
-          onChangeText={setDescription}
+          onChangeText={(val) => { setDescription(val); setDescError(false); }}
         />
+        {descError && <Text style={styles.errorText}>⚠ Description is required</Text>}
 
         {/* Category */}
         <Text style={styles.label}>Category</Text>
@@ -147,16 +159,8 @@ export default function AddExpenseScreen() {
           <Text style={styles.dateChevron}>›</Text>
         </TouchableOpacity>
 
-        {/* Notes */}
-        <Text style={styles.label}>Notes (optional)</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Any extra details..."
-          value={notes}
-          onChangeText={setNotes}
-        />
+        <Text style={styles.mandatoryNote}><Text style={styles.required}>*</Text> Required fields</Text>
 
-        {/* Submit */}
         <TouchableOpacity style={styles.button} onPress={handleAdd}>
           <Text style={styles.buttonText}>+ Add Expense</Text>
         </TouchableOpacity>
@@ -168,9 +172,7 @@ export default function AddExpenseScreen() {
         <View style={styles.summaryRow}>
           <View>
             <Text style={styles.summaryLabel}>Category</Text>
-            <Text style={styles.summaryValue}>
-              {categories.find(c => c.name === selectedCat)?.emoji} {selectedCat}
-            </Text>
+            <Text style={styles.summaryValue}>{selectedCatObj?.emoji} {selectedCat}</Text>
           </View>
           <View>
             <Text style={styles.summaryLabel}>Date</Text>
@@ -185,7 +187,6 @@ export default function AddExpenseScreen() {
           <View style={styles.modalBox}>
             <Text style={styles.modalTitle}>Select Date</Text>
 
-            {/* Day picker */}
             <Text style={styles.pickerLabel}>Day</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.pickerRow}>
               {daysList.map(d => (
@@ -199,7 +200,6 @@ export default function AddExpenseScreen() {
               ))}
             </ScrollView>
 
-            {/* Month picker */}
             <Text style={styles.pickerLabel}>Month</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.pickerRow}>
               {months.map((m, i) => (
@@ -213,7 +213,6 @@ export default function AddExpenseScreen() {
               ))}
             </ScrollView>
 
-            {/* Year picker */}
             <Text style={styles.pickerLabel}>Year</Text>
             <View style={styles.pickerRow}>
               {years.map(y => (
@@ -227,7 +226,6 @@ export default function AddExpenseScreen() {
               ))}
             </View>
 
-            {/* Buttons */}
             <View style={styles.modalBtns}>
               <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowDateModal(false)}>
                 <Text style={styles.cancelText}>Cancel</Text>
@@ -236,7 +234,6 @@ export default function AddExpenseScreen() {
                 <Text style={styles.confirmText}>Confirm</Text>
               </TouchableOpacity>
             </View>
-
           </View>
         </View>
       </Modal>
@@ -248,11 +245,17 @@ export default function AddExpenseScreen() {
 
 const styles = StyleSheet.create({
   container:        { flex: 1, backgroundColor: '#F5F5F5' },
-  successBanner:    { backgroundColor: '#D1FAE5', margin: 16, borderRadius: 10, padding: 12 },
-  successText:      { color: '#065F46', fontSize: 14, fontWeight: '600' },
+  successBanner:    { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#1a1a2e', margin: 16, borderRadius: 14, padding: 16 },
+  successIcon:      { fontSize: 24, color: '#10B981' },
+  successTitle:     { fontSize: 15, fontWeight: '700', color: '#fff' },
+  successSub:       { fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 2 },
   card:             { backgroundColor: '#fff', margin: 16, borderRadius: 16, padding: 16 },
   label:            { fontSize: 13, color: '#888', marginBottom: 6, marginTop: 14 },
+  required:         { color: '#EF4444', fontWeight: '700' },
   input:            { borderWidth: 0.5, borderColor: '#ddd', borderRadius: 10, padding: 12, fontSize: 15, backgroundColor: '#FAFAFA' },
+  inputError:       { borderColor: '#EF4444', borderWidth: 1, backgroundColor: '#FFF5F5' },
+  errorText:        { color: '#EF4444', fontSize: 12, marginTop: 4 },
+  mandatoryNote:    { fontSize: 12, color: '#aaa', marginTop: 16, marginBottom: 4 },
   chipGrid:         { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 4 },
   chip:             { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 8, paddingHorizontal: 12, borderRadius: 99, borderWidth: 0.5, borderColor: '#ddd', backgroundColor: '#F9F9F9' },
   chipEmoji:        { fontSize: 14 },
