@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "SpendSmart",
-    "slug": "SpendSmart",
+    "slug": "spendsmart",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -20,10 +20,18 @@
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
-      }
+      },
+      "package": "com.rohitmehta47.SpendSmart",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "owner": "rohitmehta47",
+    "extra": {
+      "eas": {
+        "projectId": "61f4c9dc-4800-4de2-b139-ae5361909aa4"
+      }
     }
   }
 }

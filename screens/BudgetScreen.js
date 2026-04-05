@@ -359,64 +359,82 @@ useEffect(() => {
 
       <View style={{ height: 30 }} />
 
-      {/* ==================== CATEGORY EDIT MODAL ==================== */}
-      <Modal visible={catModalVisible} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalBox}>
+ {/* ==================== CATEGORY EDIT MODAL ==================== */}
+<Modal visible={catModalVisible} transparent animationType="slide">
+  <View style={styles.modalOverlay}>
+    <View style={styles.modalBox}>
 
-            <Text style={styles.modalTitle}>
-              {editingCatIdx !== null ? 'Edit Category' : 'Add Category'}
-            </Text>
+      <Text style={styles.modalTitle}>
+        {editingCatIdx !== null ? 'Edit Category' : 'Add Category'}
+      </Text>
 
-            {/* Name input */}
-            <Text style={styles.modalLabel}>Category Name</Text>
-            <TextInput
-              style={styles.modalInput}
-              value={catName}
-              onChangeText={setCatName}
-              placeholder="e.g. Groceries"
-              maxLength={20}
-            />
+      {/* ✅ SCROLLABLE CONTENT */}
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 10 }}
+      >
+        {/* Name input */}
+        <Text style={styles.modalLabel}>Category Name</Text>
+        <TextInput
+          style={styles.modalInput}
+          value={catName}
+          onChangeText={setCatName}
+          placeholder="e.g. Groceries"
+          maxLength={20}
+        />
 
-            {/* Emoji picker */}
-            <Text style={styles.modalLabel}>Pick an Icon</Text>
-            <View style={styles.emojiGrid}>
-              {PRESET_EMOJIS.map((em) => (
-                <TouchableOpacity
-                  key={em}
-                  style={[styles.emojiOption, catEmoji === em && styles.emojiSelected]}
-                  onPress={() => setCatEmoji(em)}
-                >
-                  <Text style={styles.emojiOptionText}>{em}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            {/* Preview */}
-            <View style={styles.previewRow}>
-              <Text style={styles.previewLabel}>Preview: </Text>
-              <Text style={styles.previewEmoji}>{catEmoji}</Text>
-              <Text style={styles.previewName}>{catName || 'Category Name'}</Text>
-            </View>
-
-            {/* Modal buttons */}
-            <View style={styles.modalBtns}>
-              <TouchableOpacity style={styles.modalCancelBtn} onPress={() => setCatModalVisible(false)}>
-                <Text style={styles.modalCancelText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.modalSaveBtn} onPress={handleSaveCategory}>
-                <Text style={styles.modalSaveText}>
-                  {editingCatIdx !== null ? 'Save Changes' : 'Add Category'}
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-          </View>
+        {/* Emoji picker */}
+        <Text style={styles.modalLabel}>Pick an Icon</Text>
+        <View style={styles.emojiGrid}>
+          {PRESET_EMOJIS.map((em) => (
+            <TouchableOpacity
+              key={em}
+              style={[
+                styles.emojiOption,
+                catEmoji === em && styles.emojiSelected
+              ]}
+              onPress={() => setCatEmoji(em)}
+            >
+              <Text style={styles.emojiOptionText}>{em}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
-      </Modal>
 
-    </ScrollView>
-  );
+        {/* Preview */}
+        <View style={styles.previewRow}>
+          <Text style={styles.previewLabel}>Preview: </Text>
+          <Text style={styles.previewEmoji}>{catEmoji}</Text>
+          <Text style={styles.previewName}>
+            {catName || 'Category Name'}
+          </Text>
+        </View>
+      </ScrollView>
+
+      {/* ✅ FIXED BUTTONS (always visible) */}
+      <View style={styles.modalBtns}>
+        <TouchableOpacity
+          style={styles.modalCancelBtn}
+          onPress={() => setCatModalVisible(false)}
+        >
+          <Text style={styles.modalCancelText}>Cancel</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.modalSaveBtn}
+          onPress={handleSaveCategory}
+        >
+          <Text style={styles.modalSaveText}>
+            {editingCatIdx !== null ? 'Save Changes' : 'Add Category'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+    </View>
+  </View>
+</Modal>
+</ScrollView>  
+
+);
 }
 
 const styles = StyleSheet.create({
@@ -469,7 +487,14 @@ const styles = StyleSheet.create({
 
   // Modal
   modalOverlay:       { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-  modalBox:           { backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, maxHeight: '85%' },
+  modalBox: {
+  backgroundColor: '#fff',
+  borderTopLeftRadius: 24,
+  borderTopRightRadius: 24,
+  padding: 24,
+  maxHeight: '85%',
+  flexDirection: 'column',
+},
   modalTitle:         { fontSize: 18, fontWeight: '700', color: '#1a1a2e', marginBottom: 16, textAlign: 'center' },
   modalLabel:         { fontSize: 13, fontWeight: '600', color: '#555', marginBottom: 8 },
   modalInput:         { borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 10, padding: 12, fontSize: 15, marginBottom: 16, color: '#1a1a2e' },
@@ -481,7 +506,14 @@ const styles = StyleSheet.create({
   previewLabel:       { fontSize: 13, color: '#888' },
   previewEmoji:       { fontSize: 22 },
   previewName:        { fontSize: 15, fontWeight: '600', color: '#1a1a2e' },
-  modalBtns:          { flexDirection: 'row', gap: 12 },
+  modalBtns: {
+  flexDirection: 'row',
+  gap: 12,
+  paddingTop: 12,
+  borderTopWidth: 1,
+  borderTopColor: '#F3F4F6',
+  marginTop: 6,
+},
   modalCancelBtn:     { flex: 1, backgroundColor: '#F3F4F6', borderRadius: 12, padding: 14, alignItems: 'center' },
   modalCancelText:    { fontSize: 15, color: '#374151', fontWeight: '600' },
   modalSaveBtn:       { flex: 1, backgroundColor: '#6C63FF', borderRadius: 12, padding: 14, alignItems: 'center' },
