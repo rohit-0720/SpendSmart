@@ -7,22 +7,22 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:477414873813:android:0e258ac79719bce6d3605c",
+        "mobilesdk_app_id": "1:477414873813:android:7bc82206f9b569acd3605c",
         "android_client_info": {
-          "package_name": "com.rohitmehta47.SpendSmart"
+          "package_name": "com.rohitmehta47.spendsmart"
         }
       },
       "oauth_client": [
         {
-          "client_id": "477414873813-i1snu5ia8vd4lthf5hhpipeq2kfv9jfg.apps.googleusercontent.com",
+          "client_id": "477414873813-jjivjjv58fku1keuokmsvvbcuuek68ti.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.rohitmehta47.SpendSmart",
-            "certificate_hash": "023749980cde7ead8d774a79ddceb2b1a50869d3"
+            "package_name": "com.rohitmehta47.spendsmart",
+            "certificate_hash": "e73f518dc2327dcc60d0fbc06fd69a38caf5f179"
           }
         },
         {
-          "client_id": "477414873813-7cj3no3r4uukea006glcjd87sercbmus.apps.googleusercontent.com",
+          "client_id": "477414873813-g1p23m77j5r4pfvfqo8j33dn08le4pa2.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
@@ -35,7 +35,7 @@
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "477414873813-7cj3no3r4uukea006glcjd87sercbmus.apps.googleusercontent.com",
+              "client_id": "477414873813-g1p23m77j5r4pfvfqo8j33dn08le4pa2.apps.googleusercontent.com",
               "client_type": 3
             }
           ]

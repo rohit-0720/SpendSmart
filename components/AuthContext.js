@@ -1,150 +1,145 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+// Authentication Context
+import React, { createContext, useState, useEffect, useContext } from 'react';
 import {
-  getAuth,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged,
-  GoogleAuthProvider,
-  signInWithCredential,
-  signInWithPopup,
-} from 'firebase/auth';
-import * as Google from 'expo-auth-session/providers/google';
-import * as WebBrowser from 'expo-web-browser';
-import { Platform } from 'react-native';
-import app from '../firebase/firebaseConfig';
+  signUpWithEmail,
+  signInWithEmail,
+  signInWithGoogle,
+  logOut,
+  resetPassword,
+  onAuthStateChange,
+  getErrorMessage
+} from '../firebase/firebaseService';
 
-WebBrowser.maybeCompleteAuthSession();
+// Create Auth Context
+const AuthContext = createContext({});
 
-const AuthContext = createContext();
-export const useAuth = () => useContext(AuthContext);
+// Custom hook to use auth context
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
 
-const auth = getAuth(app);
-const googleProvider = new GoogleAuthProvider();
-
-const ANDROID_CLIENT_ID = '477414873813-i1snu5ia8vd4lthf5hhpipeq2kfv9jfg.apps.googleusercontent.com';
-const WEB_CLIENT_ID     = '477414873813-7cj3no3r4uukea006glcjd87sercbmus.apps.googleusercontent.com';
-
+// Auth Provider Component
 export function AuthProvider({ children }) {
-  const [user, setUser]       = useState(null);
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // ✅ FIX: Add redirectUri (CRITICAL for Expo)
-  const [request, response, promptAsync] = Google.useAuthRequest({
-    androidClientId: ANDROID_CLIENT_ID,
-    webClientId: WEB_CLIENT_ID,
-  });
-
-  // ✅ Auth state persistence
+  // Listen to auth state changes
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setLoading(false);
-      if (currentUser) {
-        console.log('✅ User logged in:', currentUser.email || currentUser.displayName);
+    const unsubscribe = onAuthStateChange((user) => {
+      if (user) {
+        // User is signed in
+        setUser({
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName,
+          photoURL: user.photoURL,
+          emailVerified: user.emailVerified
+        });
       } else {
-        console.log('ℹ️ No user logged in');
+        // User is signed out
+        setUser(null);
       }
+      setLoading(false);
     });
+
+    // Cleanup subscription on unmount
     return unsubscribe;
   }, []);
 
-  // ✅ FIX: safer response handling
-  useEffect(() => {
-    if (response?.type === 'success') {
-      const idToken = response?.params?.id_token;
-
-      if (!idToken) {
-        console.error('❌ No ID token received');
-        return;
-      }
-
-      const credential = GoogleAuthProvider.credential(idToken);
-
-      signInWithCredential(auth, credential)
-        .then((result) => {
-          console.log('✅ Google sign-in (native):', result.user.email);
-        })
-        .catch((error) => {
-          console.error('❌ Google credential error:', error.message);
-        });
-    }
-  }, [response]);
-
-  // Email/Password Sign Up
-  const signUp = async (email, password) => {
+  // Sign up with email
+  const signUp = async (email, password, displayName) => {
     try {
-      const result = await createUserWithEmailAndPassword(auth, email, password);
-      console.log('✅ Account created:', result.user.email);
-      return { success: true };
+      setError(null);
+      setLoading(true);
+      const result = await signUpWithEmail(email, password, displayName);
+      return result;
     } catch (error) {
-      console.error('❌ Sign up error:', error.message);
-      return { success: false, error: getErrorMessage(error.code) };
+      const message = getErrorMessage(error.code);
+      setError(message);
+      throw new Error(message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Email/Password Login
-  const login = async (email, password) => {
+  // Sign in with email
+  const signIn = async (email, password) => {
     try {
-      const result = await signInWithEmailAndPassword(auth, email, password);
-      console.log('✅ Logged in:', result.user.email);
-      return { success: true };
+      setError(null);
+      setLoading(true);
+      const result = await signInWithEmail(email, password);
+      return result;
     } catch (error) {
-      console.error('❌ Login error:', error.message);
-      return { success: false, error: getErrorMessage(error.code) };
+      const message = getErrorMessage(error.code);
+      setError(message);
+      throw new Error(message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // ✅ Google Sign In
-  const signInWithGoogle = async () => {
+  // Sign in with Google
+  const signInGoogle = async (idToken, accessToken) => {
     try {
-      if (Platform.OS === 'web') {
-        const result = await signInWithPopup(auth, googleProvider);
-        console.log('✅ Google sign-in (web):', result.user.email);
-        return { success: true };
-      } else {
-        const result = await promptAsync();
-
-        if (result?.type === 'success') {
-          return { success: true };
-        } else if (result?.type === 'cancel' || result?.type === 'dismiss') {
-          return { success: false, error: 'Sign-in cancelled. Please try again.' };
-        } else {
-          return { success: false, error: 'Google Sign-In failed. Please try again.' };
-        }
-      }
+      setError(null);
+      setLoading(true);
+      const result = await signInWithGoogle(idToken, accessToken);
+      return result;
     } catch (error) {
-      console.error('❌ Google sign-in error:', error.message);
-      return { success: false, error: getErrorMessage(error.code) };
+      const message = getErrorMessage(error.code);
+      setError(message);
+      throw new Error(message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Logout
-  const logout = async () => {
+  // Sign out
+  const signOutUser = async () => {
     try {
-      await signOut(auth);
-      console.log('✅ Logged out');
-      return { success: true };
+      setError(null);
+      await logOut();
     } catch (error) {
-      console.error('❌ Logout error:', error.message);
-      return { success: false, error: error.message };
+      const message = getErrorMessage(error.code);
+      setError(message);
+      throw new Error(message);
     }
   };
 
-  const getErrorMessage = (code) => {
-    switch (code) {
-      case 'auth/email-already-in-use': return 'This email is already registered. Try logging in instead.';
-      case 'auth/weak-password': return 'Password should be at least 6 characters.';
-      case 'auth/invalid-email': return 'Please enter a valid email address.';
-      case 'auth/user-not-found': return 'No account found with this email. Try signing up.';
-      case 'auth/wrong-password': return 'Incorrect password. Please try again.';
-      case 'auth/too-many-requests': return 'Too many failed attempts. Please try again later.';
-      case 'auth/popup-closed-by-user': return 'Sign-in cancelled. Please try again.';
-      default: return 'Something went wrong. Please try again.';
+  // Reset password
+  const resetUserPassword = async (email) => {
+    try {
+      setError(null);
+      await resetPassword(email);
+      return { success: true, message: 'Password reset email sent!' };
+    } catch (error) {
+      const message = getErrorMessage(error.code);
+      setError(message);
+      throw new Error(message);
     }
   };
 
-  const value = { user, loading, signUp, login, signInWithGoogle, logout };
+  // Clear error
+  const clearError = () => {
+    setError(null);
+  };
+
+  const value = {
+    user,
+    loading,
+    error,
+    signUp,
+    signIn,
+    signInGoogle,
+    signOut: signOutUser,
+    resetPassword: resetUserPassword,
+    clearError
+  };
 
   return (
     <AuthContext.Provider value={value}>
@@ -152,3 +147,5 @@ export function AuthProvider({ children }) {
     </AuthContext.Provider>
   );
 }
+
+export default AuthContext;

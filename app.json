@@ -2,6 +2,7 @@
   "expo": {
     "name": "SpendSmart",
     "slug": "spendsmart",
+    "scheme": "spendsmart",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -12,7 +13,8 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.rohitmehta47.spendsmart"
     },
     "android": {
       "adaptiveIcon": {
@@ -21,16 +23,17 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "package": "com.rohitmehta47.SpendSmart",
+      "package": "com.rohitmehta47.spendsmart",
       "googleServicesFile": "./google-services.json"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "owner": "rohitmehta47",
+    "owner": "rohitmehta69",
+    "plugins": ["@react-native-google-signin/google-signin"],
     "extra": {
       "eas": {
-        "projectId": "61f4c9dc-4800-4de2-b139-ae5361909aa4"
+        "projectId": "3cb7a675-1159-471f-9657-bdb939198aa9"
       }
     }
   }
