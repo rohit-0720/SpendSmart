@@ -1,6 +1,6 @@
 # SpendSmart
 
-SpendSmart is a cross-platform personal finance app built with Expo and React Native. It helps users set a monthly budget, organize category allocations, track expenses, review insights, and sign in securely with Firebase Authentication.
+SpendSmart is a cross-platform personal finance app built with Expo and React Native. It helps users set a monthly budget, organize category allocations, track expenses and review insights.
 
 
 
@@ -170,4 +170,4 @@ eas build -p android --profile preview
 
 ## Author
 
-Developed by Rohit.
+Developed by Rohit ;)
