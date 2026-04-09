@@ -2,6 +2,11 @@
 
 SpendSmart is a cross-platform personal finance app built with Expo and React Native. It helps users set a monthly budget, organize category allocations, track expenses, review insights, and sign in securely with Firebase Authentication.
 
+
+
+<img width="1919" height="994" alt="image" src="https://github.com/user-attachments/assets/a8c2073e-95e4-43b5-95d8-e68bfb5fe4b9" />
+
+
 ## Highlights
 
 - Email/password authentication with Firebase
@@ -128,12 +133,6 @@ npx expo start
 npx expo start --web
 ```
 
-### Run local Android dev build
-
-```bash
-npx expo run:android
-```
-
 ## Firebase Setup
 
 You need a Firebase project configured for this app.
@@ -150,34 +149,6 @@ Recommended providers:
 
 Also make sure your Android package and SHA fingerprints are configured correctly in Firebase if you plan to use Google sign-in in Android builds.
 
-## Firestore Rules
-
-This project stores user data under a single user document structure. A matching Firestore rules setup is:
-
-```javascript
-rules_version = '2';
-
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-  }
-}
-```
-
-## Build Commands
-
-### Local Android release APK
-
-```bash
-cd android
-./gradlew assembleRelease
-```
-
-Expected output:
-
-`android/app/build/outputs/apk/release/app-release.apk`
 
 ### Expo local Android run
 
