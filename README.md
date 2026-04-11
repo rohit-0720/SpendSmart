@@ -162,6 +162,10 @@ npx expo run:android --variant release
 eas build -p android --profile preview
 ```
 
+```
+Spend Smart Apk(Andoid) - https://drive.google.com/file/d/1lD89mFg6lBNoVP3t26hCy_OIuk2YEuen/view?usp=sharing
+```
+
 ## Notes
 
 - Web and Android use different Google sign-in paths, so Firebase and OAuth configuration must be aligned carefully.
