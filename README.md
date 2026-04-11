@@ -170,7 +170,8 @@ eas build -p android --profile preview
 - The UI includes both light and dark themes with a custom tab bar and themed authentication screen.
 
 
-Spend Smart Apk(Andoid) - https://drive.google.com/file/d/1lD89mFg6lBNoVP3t26hCy_OIuk2YEuen/view?usp=sharing
+### Spend Smart Apk(Andoid)
+https://drive.google.com/file/d/1lD89mFg6lBNoVP3t26hCy_OIuk2YEuen/view?usp=sharing
 
 
 ## Author
