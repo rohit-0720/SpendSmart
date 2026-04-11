@@ -169,9 +169,9 @@ eas build -p android --profile preview
 - Android release builds may require release SHA registration in Firebase for Google sign-in to work correctly.
 - The UI includes both light and dark themes with a custom tab bar and themed authentication screen.
 
-```
+
 Spend Smart Apk(Andoid) - https://drive.google.com/file/d/1lD89mFg6lBNoVP3t26hCy_OIuk2YEuen/view?usp=sharing
-```
+
 
 ## Author
 
